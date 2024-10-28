@@ -1,0 +1,43 @@
+#!/bin/bash
+
+if [ "$1" != "-S" ]; then
+    echo "Usage: gitmaster -S [repository name]"
+    exit 1
+fi
+
+REPO_NAME=$2
+
+SEARCH_URL="https://api.github.com/search/repositories?q=$REPO_NAME"
+
+REPOS=$(curl -s "$SEARCH_URL" | jq -r '.items[] | "\(.full_name) \(.html_url)"')
+
+if [ -z "$REPOS" ]; then
+    echo "Repository '$REPO_NAME' not found."
+    exit 1
+fi
+
+IFS=$'\n' read -d '' -r -a REPO_ARRAY <<< "$REPOS"
+
+if [ ${#REPO_ARRAY[@]} -eq 1 ]; then
+    REPO_URL=$(echo "${REPO_ARRAY[0]}" | awk '{print $2}')
+    echo "Downloading repository: $REPO_URL"
+    git clone "$REPO_URL"
+else
+    # If multiple repositories are found, provide a choice
+    echo "Multiple repositories found. Please choose which one to download:"
+    for i in "${!REPO_ARRAY[@]}"; do
+        echo "$((i+1)). $(echo "${REPO_ARRAY[$i]}" | awk '{print $1}')"
+    done
+
+    read -p "Enter the number of the repository to download: " CHOICE
+
+    # Check if the input is a valid number
+    if [[ "$CHOICE" =~ ^[0-9]+$ ]] && [ "$CHOICE" -ge 1 ] && [ "$CHOICE" -le ${#REPO_ARRAY[@]} ]; then
+        REPO_URL=$(echo "${REPO_ARRAY[$((CHOICE-1))]}" | awk '{print $2}')
+        echo "Downloading repository: $REPO_URL"
+        git clone "$REPO_URL"
+    else
+        echo "Invalid choice."
+        exit 1
+    fi
+fi
