@@ -9,5 +9,7 @@ To use GitMaster, you must download the "git" package.
 
 How to install?:
 1) write "git clone https://github.com/CowerDawn/GitMaster"
-2)After installation, go to the GitMaster directory and enter "chmod +x GitMaster"
+
+2) After installation, go to the GitMaster directory and enter "chmod +x GitMaster"
+
 3) Use it!
